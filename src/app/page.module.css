@@ -1,0 +1,49 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Make the container full height of the viewport */
+  background-color: #ffffff; /* Set the background color of the container, change to desired color */
+}
+
+/* Styles for the button */
+.runButton {
+  background-color: #000000; /* Black background color */
+  color: #ffffff; /* White text color */
+  border: none; /* Remove the border */
+  padding: 10px 20px; /* Adjust padding to make the button square */
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  width: 150px;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.linkContainer {
+  display: flex;
+}
+
+.inputLink {
+  flex: 5;
+  display: inline-block;
+  width: 500px;
+  margin-right: 35px;
+  padding-left: 20px;
+  border-radius: 0px;
+}
+
+.inputLink:focus {
+  border-radius: 20px;  
+}
+
+.runButton {
+  flex: 1;
+  display: block;
+  
+}
+
