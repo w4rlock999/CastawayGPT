@@ -8,31 +8,21 @@ import { Chroma } from "langchain/vectorstores/chroma";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { useEffect, useState } from 'react';
-
-const model = new ChatOpenAI({    
-  // openAIApiKey: "sk-WRONG",  
-});
-
-const promptTemplate = PromptTemplate.fromTemplate(
-  "Tell me a joke about {topic}"
-);
+import { Console } from 'console';
 
 export default function Home() {
 
   const [youtubeLink, setYoutubeLink] = useState('')
 
   const runButtonOnClickHandler = async () => {    
-    // const chain = promptTemplate.pipe(model);
-    // const result = await chain.invoke({ topic: "bears" });
-    // console.log(result);
-
     let response = await fetch('/api/initializeWithLink', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',        
       },
       body: JSON.stringify({youtubeLink})
-    })    
+    })   
+        
   }
 
   const linkOnChangeHandler = (e) => {

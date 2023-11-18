@@ -38,3 +38,6 @@ next-env.d.ts
 chroma.log
 /chroma_data
 */chroma_db
+
+# any .env
+*/.env

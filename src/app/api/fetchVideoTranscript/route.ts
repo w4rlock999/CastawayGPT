@@ -32,13 +32,13 @@ function millisecondsToHMS(milliseconds : number): HMSTimestamp {
     };
   }
 
-function splitTranscript(objectArray : TranscriptResponse[], splitInto : number): TranscriptObject[] {
+function regroupTranscript(objectArray : TranscriptResponse[], groupMembers : number): TranscriptObject[] {
 
     let arrayLength = objectArray.length
     var splittedTranscript : TranscriptObject[] = [];
 
-    for(let i = 0; i < arrayLength; i+=splitInto) {
-        var curEnd = Math.min(i+splitInto,arrayLength);
+    for(let i = 0; i < arrayLength; i+=groupMembers) {
+        var curEnd = Math.min(i+groupMembers,arrayLength);
         var curOffset = objectArray[i].offset;
         var combinedText = objectArray.slice(i, curEnd).map(obj => obj.text).join(" ");
 
@@ -55,24 +55,25 @@ function splitTranscript(objectArray : TranscriptResponse[], splitInto : number)
     return splittedTranscript;
 }
 
-export async function POST() {
+export async function GET() {
     var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript('https://youtu.be/vnVfxu530AM');
     
-    var splittedTranscript : TranscriptObject[] = await splitTranscript(objectArray, 5);
+    var splittedTranscript : TranscriptObject[] = await regroupTranscript(objectArray, 10);
     // console.log(splittedTranscript);
     // splittedTranscript.forEach(transcript => {
     //     console.log(transcript.text);
     // });
 
-    // const subsetDocument = splittedTranscript.slice(0, 5); // Extract the first five members
-    const transcriptDocuments = splittedTranscript.map(obj => (
+    const subsetDocument = splittedTranscript.slice(0, 50); // Extract the first five members
+    const transcriptDocuments = subsetDocument.map(obj => (
         {                  
           page_content : obj.text,
           metadata : {timestamp: obj.timestamp}                          
         }
       ));
 
-    console.log(transcriptDocuments)  
+    console.log(transcriptDocuments)      
+    console.log(transcriptDocuments.length)
 
     return new Response("fetched youtube");
 

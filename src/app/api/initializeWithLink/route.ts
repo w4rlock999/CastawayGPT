@@ -35,62 +35,69 @@ function millisecondsToHMS(milliseconds : number): HMSTimestamp {
   };
 }
 
-function splitTranscript(objectArray : TranscriptResponse[], splitInto : number): TranscriptObject[] {
+function regroupTranscript(objectArray : TranscriptResponse[], groupMembers : number): TranscriptObject[] {
 
   let arrayLength = objectArray.length
-  var splittedTranscript : TranscriptObject[] = [];
+  var regroupedTranscript : TranscriptObject[] = [];
 
-  for(let i = 0; i < arrayLength; i+=splitInto) {
-      var curEnd = Math.min(i+splitInto,arrayLength);
+  for(let i = 0; i < arrayLength; i+=groupMembers) {
+      var curEnd = Math.min(i+groupMembers,arrayLength);
       var curOffset = objectArray[i].offset;
       var combinedText = objectArray.slice(i, curEnd).map(obj => obj.text).join(" ");
 
       var curHMS : HMSTimestamp = millisecondsToHMS(curOffset);        
       // console.log("offset: " + curOffset + " text: " + combinedText)
 
-      var curSplittedTranscript : TranscriptObject = {
+      var curTranscriptGroup : TranscriptObject = {
           timestamp: curHMS,
           text: combinedText
       };    
-      splittedTranscript.push(curSplittedTranscript);
+      regroupedTranscript.push(curTranscriptGroup)
   }
 
-  return splittedTranscript;
+  return regroupedTranscript;
 }
 
 export async function POST(request: Request) {
 
     const data : Payload = await request.json()  
 
-    var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript(data.youtubeLink);
+    if (data.youtubeLink != "") {
+      var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript(data.youtubeLink);
     
-    var splittedTranscript : TranscriptObject[] = await splitTranscript(objectArray, 5);    
-    
-    const transcriptDocuments = splittedTranscript.map(obj => (
-        {                  
-          page_content : obj.text,
-          metadata : {timestamp: obj.timestamp}                          
-        }
-      ));
-
-    console.log(transcriptDocuments)  
-
-
-    const response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',        
-      },
-      body: JSON.stringify(transcriptDocuments),
-    });
-
-    if (response.ok) {
-      const result = await response.json();      
-      console.log(JSON.stringify(result))
-      return new Response(JSON.stringify(result))
-    } else {      
-      return Response.error()      
-    }
+      var splittedTranscript : TranscriptObject[] = await regroupTranscript(objectArray, 10);    
       
-    return new Response("Initialized success!");
+      const subsetDocument = splittedTranscript.slice(0, 25); // Extract the first five members
+      const transcriptDocuments = subsetDocument.map(obj => (
+          {                  
+            page_content : obj.text,
+            metadata : {timestamp: obj.timestamp}                          
+          }
+        ));
+  
+      console.log(transcriptDocuments)  
+      console.log(transcriptDocuments.length)  
+    
+      const response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',        
+        },
+        body: JSON.stringify(transcriptDocuments),
+      });
+  
+      if (response.ok) {
+        const result = await response.json()
+        console.log(JSON.stringify(result))
+        return new Response(JSON.stringify(result))
+      } else {      
+        return Response.error()      
+      }
+        
+      return new Response("Initialized success!");
+    }else{
+      console.log("Link not valid!")
+      return new Response("Youtube Link Not Valid")      
+    }
+
 }
