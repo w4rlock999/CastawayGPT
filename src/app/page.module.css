@@ -1,9 +1,13 @@
 .container {
-  display: flex;
+  display: inline-block;
+  height: 100vh;
+  margin-top: 30%;
+  margin-left: 25%;
+  
+  /* display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* Make the container full height of the viewport */
-  background-color: #ffffff; /* Set the background color of the container, change to desired color */
+  height: 100vh;  */
 }
 
 /* Styles for the button */

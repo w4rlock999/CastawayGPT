@@ -23,15 +23,12 @@ def Root():
 def AddEmbeddingToChroma():
     try:    
         json_data = request.get_json()                          
-
         docs: List[Document] = []
-
         for curDocument in json_data:
             page_content = curDocument["page_content"]            
             metadata = curDocument["metadata"]
                         
             docs.append(Document(page_content=page_content, metadata=metadata['timestamp']))
-
         print(docs)
 
         # create the open-source embedding function -> change to openAI
@@ -39,7 +36,7 @@ def AddEmbeddingToChroma():
         embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
 
         # load it into Chroma
-        db = Chroma.from_documents(docs, embedding_function)
+        db = Chroma.from_documents(collection_name = "transcript_db",documents = docs, embedding = embedding_function)
 
         # query it
         query = "Where is the speaker come from?"
@@ -55,7 +52,24 @@ def AddEmbeddingToChroma():
     except Exception as e:    
         return jsonify({"error": str(e)})
 
-
 @app.route("/chatWithContext", methods=['POST'])
 def ChatWithContext():
-    return jsonify({"AIMessage" : "I, Robot"})
+
+    try:
+        json_data = request.get_json()
+        print("context search: " + json_data)
+        embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
+        db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)
+                
+        docs = db.similarity_search(json_data)
+
+        print(docs)
+        # print results
+        # print(docs[0].page_content)
+        # print(docs[1].page_content)
+        # print(docs[2].page_content)
+
+        return jsonify({"response" : "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+

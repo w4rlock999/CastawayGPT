@@ -13,6 +13,7 @@ import { Console } from 'console';
 export default function Home() {
 
   const [youtubeLink, setYoutubeLink] = useState('')
+  const [promptSearch, setPromptSearch] = useState('')
 
   const runButtonOnClickHandler = async () => {    
     let response = await fetch('/api/initializeWithLink', {
@@ -29,6 +30,21 @@ export default function Home() {
     setYoutubeLink(e.target.value)
   }
 
+  const searchButtonOnClickHandler = async () => {    
+    let response = await fetch('/api/searchWithPrompt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',        
+      },
+      body: JSON.stringify({promptSearch})
+    })   
+        
+  }
+
+  const promptOnChangeHandler = (e) => {
+    setPromptSearch(e.target.value)
+  }
+
   return (
     <div className = {styles.container}>
       <div className = {styles.linkContainer}>
@@ -36,6 +52,13 @@ export default function Home() {
         </input>
         <button className = {styles.runButton} onClick={runButtonOnClickHandler}>
           Start Chat
+        </button>      
+      </div>
+      <div className = {styles.promptContainer}>
+        <input className = {styles.inputPrompt} type='text' placeholder='Prompt search here' value={promptSearch} onChange={promptOnChangeHandler}>
+        </input>
+        <button className = {styles.searchButton} onClick={searchButtonOnClickHandler}>
+          Search
         </button>      
       </div>
     </div>
