@@ -1,13 +1,9 @@
-.container {
-  display: inline-block;
-  height: 100vh;
-  margin-top: 30%;
-  margin-left: 25%;
-  
-  /* display: flex;
+.container {  
+  display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;  */
+  height: 100vh; 
+  background-color: #ffffff;
 }
 
 /* Styles for the button */
@@ -30,24 +26,127 @@
 
 .linkContainer {
   display: flex;
+  z-index: 5;
+  margin-top: -70px;
 }
 
-.inputLink {
+.linkInput {
   flex: 5;
   display: inline-block;
   width: 500px;
+
+  margin-left: 80px;
   margin-right: 35px;
+
   padding-left: 20px;
   border-radius: 0px;
+
+  border: 2px solid black;
 }
 
-.inputLink:focus {
+.linkInput:focus {
   border-radius: 20px;  
+  border: 2px solid black;
+  outline: none;
 }
 
 .runButton {
   flex: 1;
-  display: block;
-  
+  display: block;  
 }
 
+.circle1 {
+  display: inline-block;
+  position: fixed;
+  top: -300px;
+  right: 150px;
+  
+  width: 703px;
+  height: 501px;
+  
+
+  border-radius: 703px;
+  background: #E1ED96;
+
+  filter: blur(100.3499984741211px);
+  z-index: 1;
+}
+
+.circle2 {
+  display: inline-block;
+  position: fixed;
+  bottom: -300px;
+  left: 50px;
+  
+  width: 703px;
+  height: 501px;
+  
+
+  border-radius: 703px;
+  background: #96CEED;
+
+  filter: blur(100.3499984741211px);
+  z-index: 1;
+}
+
+.chatInputAndButtonContainer {
+  display: inline-block;
+  position: fixed;
+
+  left: 0px;
+  bottom: 0px;  
+  --height: 24vh;
+  height: var(--height);
+  width: 100%;
+
+  text-align: center;
+  z-index: 5;
+  /* background-color: blue;   */
+
+  padding-top: calc(0.4*var(--height) - 20px);;
+  border-top: 2px solid #D3D3D3;
+}
+
+.chatInput {  
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  vertical-align: middle;
+
+  display: inline-block;
+  position: relative;
+  
+  width: 800px;
+  height: 60px;
+
+  margin-right: 35px;
+  padding-left: 20px;
+  border-radius: 0px;  
+
+  border: 2px solid black;
+}
+
+.chatInput:focus {
+  border-radius: 20px;  
+  border: 2px solid black;
+  outline: none;
+}
+
+.sendButton {
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+  box-sizing: border-box;
+  
+  display: inline-block;
+  position: relative;
+
+  width: 55px;
+  height: 55px;
+
+  border-radius: 50px;
+  background-color: #000000; /* Black background color */  
+  color: white;
+  font-size: 20px;
+  border: none; /* Remove the border */
+}
