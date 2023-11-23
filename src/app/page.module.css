@@ -1,33 +1,39 @@
 .container {  
   display: flex;
   justify-content: center;
-  align-items: center;
   height: 100vh; 
   background-color: #ffffff;
 }
 
-/* Styles for the button */
-.runButton {
-  background-color: #000000; /* Black background color */
-  color: #ffffff; /* White text color */
-  border: none; /* Remove the border */
-  padding: 10px 20px; /* Adjust padding to make the button square */
-  text-align: center;
-  text-decoration: none;
+.chatPageContainer {
   display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-  width: 150px;
-  
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  z-index: 5;
 }
 
-.linkContainer {
+.landingPageContainer {
   display: flex;
   z-index: 5;
   margin-top: -70px;
+  align-items: center;
+}
+
+/* Styles for the button */
+.runButton {  
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+  box-sizing: border-box;
+  
+  display: inline-block;
+  position: relative;
+
+  width: 150px;  
+  height: 46px;
+  
+  background-color: #000000; /* Black background color */  
+  color: white;
+  font-size: 20px;
+  border: none; /* Remove the border */
 }
 
 .linkInput {
@@ -42,6 +48,8 @@
   border-radius: 0px;
 
   border: 2px solid black;
+  
+  height: 40px;
 }
 
 .linkInput:focus {
@@ -50,16 +58,11 @@
   outline: none;
 }
 
-.runButton {
-  flex: 1;
-  display: block;  
-}
-
 .circle1 {
   display: inline-block;
   position: fixed;
   top: -300px;
-  right: 150px;
+  right: -55px;
   
   width: 703px;
   height: 501px;
@@ -69,24 +72,23 @@
   background: #E1ED96;
 
   filter: blur(100.3499984741211px);
-  z-index: 1;
+  z-index: 0;
 }
 
 .circle2 {
   display: inline-block;
   position: fixed;
-  bottom: -300px;
-  left: 50px;
+  bottom: 250px;
+  left: -240px;
   
-  width: 703px;
-  height: 501px;
+  width: 400px;
+  height: 500px;
   
-
-  border-radius: 703px;
+  border-radius: 150px;
   background: #96CEED;
 
-  filter: blur(100.3499984741211px);
-  z-index: 1;
+  filter: blur(50.3499984741211px);
+  z-index: 0;
 }
 
 .chatInputAndButtonContainer {
@@ -95,16 +97,18 @@
 
   left: 0px;
   bottom: 0px;  
-  --height: 24vh;
+  --height: 14vh;
   height: var(--height);
   width: 100%;
 
   text-align: center;
-  z-index: 5;
   /* background-color: blue;   */
 
   padding-top: calc(0.4*var(--height) - 20px);;
   border-top: 2px solid #D3D3D3;
+  background-color: white;
+
+  z-index: 5;
 }
 
 .chatInput {  
@@ -123,7 +127,7 @@
   padding-left: 20px;
   border-radius: 0px;  
 
-  border: 2px solid black;
+  border: 2px solid black;  
 }
 
 .chatInput:focus {
@@ -149,4 +153,27 @@
   color: white;
   font-size: 20px;
   border: none; /* Remove the border */
+}
+
+.responseContainer {
+  position: relative;
+  top: 50px;
+
+  text-align: left;
+  width: 52vw;
+  margin-bottom: 30px;
+  padding-top: 10px;
+
+  vertical-align: top;
+  border-top: 2px solid #D3D3D3;
+}
+
+.responseTitle {
+  position: relative;
+  top: 0px;
+}
+
+.responseBody {
+  position: relative;
+  top: 0px;
 }

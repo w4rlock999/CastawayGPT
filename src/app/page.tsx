@@ -54,7 +54,7 @@ export default function Home() {
     <div className = {styles.container}>
 
       {landingMode == true && 
-        <div className = {styles.linkContainer}>
+        <div className = {styles.landingPageContainer}>
           <input className = {styles.linkInput} type='text' placeholder='Paste your youtube link here' value={youtubeLink} onChange={linkOnChangeHandler}>
           </input>
           <button className = {styles.runButton} onClick={runButtonOnClickHandler}>
@@ -65,6 +65,24 @@ export default function Home() {
 
       {landingMode == false &&              
         <div className = {styles.chatPageContainer}>
+          <div className = {styles.responseContainer}>
+            <h1 className = {styles.responseTitle}>
+              Elon Musk: War, AI, Aliens, Politics, Physics, Video Games, and Humanity | Lex Fridman Podcast #400
+            </h1>
+            <br></br>
+            <br></br>            
+            <p className = {styles.responseBody}>
+              Lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet 
+              dolor sit amet amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet 
+              sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum 
+            </p>
+            <br></br>            
+            <br></br>            
+            <br></br>            
+            <br></br>            
+            <br></br>            
+          </div>
+         
           <div className = {styles.chatInputAndButtonContainer}>          
             <input className = {styles.chatInput} type='text' placeholder='Ask anything here!' value={chatMessage} onChange={chatOnChangeHandler}>
             </input>                    
@@ -73,6 +91,8 @@ export default function Home() {
             </button>        
             {/* <button className = {styles.sendButton}>            
             </button>  */}
+            {/* <div className = {styles.circle2}>        
+            </div> */}
           </div>        
         </div>     
       } 
