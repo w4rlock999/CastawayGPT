@@ -10,16 +10,81 @@ import { TextLoader } from "langchain/document_loaders/fs/text";
 import { useEffect, useState } from 'react';
 import { Console } from 'console';
 
+interface videoTimestamp {
+  title: string;
+  link : string;
+}
+
+interface chatResponse {
+  title : string;
+  content : string;
+  videos : videoTimestamp[];
+}
+
+function ChatResponse(props) {
+  
+  return (
+    <div className = {styles.responseContainer}>
+      <h1 className = {styles.responseTitle}>
+        {props.curChatResponse.title}
+      </h1>
+      <br></br>
+      <br></br>            
+      <p className = {styles.responseBody}>
+        {props.curChatResponse.content}
+      </p>            
+      <br></br>            
+      <br></br>    
+      <div className = {styles.videosContainer}>
+        {props.curChatResponse.videos.map((curVideo, index) => (
+          <div className = {styles.videoContainer}>
+          <iframe width="270" height="180"
+            src={curVideo.link} frameborder="0" allow="fullscreen">
+          </iframe>
+          <p className = {styles.videoText}>
+            {curVideo.title}
+          </p>
+        </div> 
+        ))}               
+      </div>                                   
+    </div>
+  )
+}
+
 export default function Home() {
 
-  const [youtubeLink, setYoutubeLink] = useState('')
-  const [chatMessage, setChatMessage] = useState('')
+  const curChatResponse : chatResponse = {
+    title: "Elon Musk: War, AI, Aliens, Politics, Physics, Video Games, and Humanity | Lex Fridman Podcast #400",
+    content: "Lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet dolor sit amet amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum",
+    videos: [
+      {
+        title: "2:30 Lorem ipsum dolor sit amet",
+        link: "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"
+      },{
+        title: "2:30 Lorem ipsum dolor sit amet",
+        link: "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"
+      },{
+        title: "2:30 Lorem ipsum dolor sit amet",
+        link: "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"
+      },{
+        title: "2:30 Lorem ipsum dolor sit amet",
+        link: "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"
+      },{
+        title: "2:30 Lorem ipsum dolor sit amet",
+        link: "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"
+      },
+    ]
+  }
+
+  const [youtubeLink, setYoutubeLink] = useState('')  
   const [promptSearch, setPromptSearch] = useState('')
   const [landingMode, setLandingMode] = useState(true)
   const [chatsHistory, setChatsHistory] = useState([])
-
+  const [chatMessage, setChatMessage] = useState('')
+  const [responses, setResponses] = useState<chatResponse[]>([])
+  // setArrayOfObjects((prevArray) => [...prevArray, newObject]); //to add new object to the array, use this 
+  
   const runButtonOnClickHandler = async () => {    
-    setLandingMode(false)
 
     let response = await fetch('/api/initializeWithLink', {
       method: 'POST',
@@ -27,27 +92,38 @@ export default function Home() {
         'Content-Type': 'application/json',        
       },
       body: JSON.stringify({youtubeLink})
-    })   
-        
-  }
+    })         
+    
+    if (response.ok) {
+      const responseData : chatResponse = await response.json()
+      // console.log(responseData)
+      setResponses((prevArray) => [...prevArray, responseData]) 
+      setLandingMode(false)
+    }
+  }  
 
   const linkOnChangeHandler = (e) => {
     setYoutubeLink(e.target.value)
   }
 
-  const chatButtonOnClickHandler = async () => {    
-    // let response = await fetch('/api/searchWithPrompt', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',        
-    //   },
-    //   body: JSON.stringify({promptSearch})
-    // })   
-    setLandingMode(true)        
-  }
-
   const chatOnChangeHandler = (e) => {
     setChatMessage(e.target.value)
+  }  
+
+  const chatButtonOnClickHandler = async () => {    
+    let response = await fetch('/api/searchWithPrompt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',        
+      },
+      body: JSON.stringify({chatMessage})
+    })   
+
+    if (response.ok) {
+      const responseData : chatResponse = await response.json()
+      // console.log(responseData)
+      setResponses((prevArray) => [...prevArray, responseData])       
+    }        
   }
 
   return (
@@ -63,41 +139,22 @@ export default function Home() {
         </div>
       }
 
-      {landingMode == false &&              
+      {landingMode == false && 
         <div className = {styles.chatPageContainer}>
-          <div className = {styles.responseContainer}>
-            <h1 className = {styles.responseTitle}>
-              Elon Musk: War, AI, Aliens, Politics, Physics, Video Games, and Humanity | Lex Fridman Podcast #400
-            </h1>
-            <br></br>
-            <br></br>            
-            <p className = {styles.responseBody}>
-              Lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet 
-              dolor sit amet amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet 
-              sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum 
-            </p>
-            <br></br>            
-            <br></br>            
-            <br></br>            
-            <br></br>            
-            <br></br>            
-          </div>
-         
+          {responses.map((response, index) => (
+            <ChatResponse curChatResponse = {response}/>    
+          ))}
+          {/* <ChatResponse/>    
+          <ChatResponse/>     */}
           <div className = {styles.chatInputAndButtonContainer}>          
             <input className = {styles.chatInput} type='text' placeholder='Ask anything here!' value={chatMessage} onChange={chatOnChangeHandler}>
             </input>                    
             <button className = {styles.sendButton} onClick={chatButtonOnClickHandler}>       
             ▲       
             </button>        
-            {/* <button className = {styles.sendButton}>            
-            </button>  */}
-            {/* <div className = {styles.circle2}>        
-            </div> */}
           </div>        
-        </div>     
+        </div> 
       } 
-
-
 
       <div className = {styles.circle1}>        
       </div>

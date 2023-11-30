@@ -57,13 +57,26 @@ def ChatWithContext():
 
     try:
         json_data = request.get_json()
-        print("context search: " + json_data)
-        embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
-        db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)
-                
-        docs = db.similarity_search(json_data)
+        print(json_data['message'])
+        # print("request message: " + json_data.message)
+        response_data = {
+            "title": "Example Response",
+            "content": "This is a sample response with video timestamps.",
+            "videos": [
+                {"title": "Video 1", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"},
+                {"title": "Video 2", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=700"}
+            ]
+        }
+        return jsonify(response_data)
 
-        print(docs)
+
+        # print("context search: " + json_data)
+        # embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
+        # db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)
+                
+        # docs = db.similarity_search(json_data)
+
+        # print(docs)
         # print results
         # print(docs[0].page_content)
         # print(docs[1].page_content)

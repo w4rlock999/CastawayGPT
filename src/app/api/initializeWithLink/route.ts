@@ -63,29 +63,40 @@ export async function POST(request: Request) {
     const data : Payload = await request.json()  
 
     if (data.youtubeLink != "") {
-      var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript(data.youtubeLink);
+      // var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript(data.youtubeLink);
     
-      var splittedTranscript : TranscriptObject[] = await regroupTranscript(objectArray, 10);    
+      // var splittedTranscript : TranscriptObject[] = await regroupTranscript(objectArray, 10);    
       
-      const subsetDocument = splittedTranscript.slice(0, 25); // Extract the first five members
-      const transcriptDocuments = subsetDocument.map(obj => (
-          {                  
-            page_content : obj.text,
-            metadata : {timestamp: obj.timestamp}                          
-          }
-        ));
+      // const subsetDocument = splittedTranscript.slice(0, 25); // Extract the first five members
+      // const transcriptDocuments = subsetDocument.map(obj => (
+      //     {                  
+      //       page_content : obj.text,
+      //       metadata : {timestamp: obj.timestamp}                          
+      //     }
+      //   ));
   
-      console.log(transcriptDocuments)  
-      console.log(transcriptDocuments.length)  
+      // console.log(transcriptDocuments)  
+      // console.log(transcriptDocuments.length)  
     
-      const response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
+      // var response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',        
+      //   },
+      //   body: JSON.stringify(transcriptDocuments),
+      // });
+  
+      // response = response && await fetch('http://127.0.0.1:5000/chatWithContext', {
+      var response = await fetch('http://127.0.0.1:5000/chatWithContext', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',        
         },
-        body: JSON.stringify(transcriptDocuments),
+        body: JSON.stringify({
+          message: "initialize chat with video summary"
+        }),
       });
-  
+
       if (response.ok) {
         const result = await response.json()
         console.log(JSON.stringify(result))
@@ -97,7 +108,7 @@ export async function POST(request: Request) {
       return new Response("Initialized success!");
     }else{
       console.log("Link not valid!")
-      return new Response("Youtube Link Not Valid")      
+      return Response.error()   
     }
 
 }

@@ -1,7 +1,7 @@
 .container {  
   display: flex;
   justify-content: center;
-  height: 100vh; 
+  height: 95vh; 
   background-color: #ffffff;
 }
 
@@ -176,4 +176,30 @@
 .responseBody {
   position: relative;
   top: 0px;
+}
+
+.videosContainer {
+  display: flex;
+  /* white-space: nowrap;  */
+  overflow-x: auto; /* Enable horizontal scrolling */
+}
+
+.videoContainer {
+  
+  display: inline-block;
+  /* align-items: center; 
+  justify-content: center;  */
+  
+  height: 220px;
+  width: 270px;
+
+  /* background-color: lightcyan;     */
+
+  margin: 10px 70px 20px 0px;
+
+  /* text-align: center; */ 
+}
+
+.videoText {
+  margin: 0px;
 }
