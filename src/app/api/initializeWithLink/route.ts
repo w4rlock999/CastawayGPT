@@ -39,9 +39,16 @@ function regroupTranscript(objectArray : TranscriptResponse[], groupMembers : nu
 
   let arrayLength = objectArray.length
   var regroupedTranscript : TranscriptObject[] = [];
+  var curEnd : number
 
-  for(let i = 0; i < arrayLength; i+=groupMembers) {
-      var curEnd = Math.min(i+groupMembers,arrayLength);
+  for(let i = 0; i < arrayLength; i=curEnd) {
+
+      if (groupMembers == 0){
+        curEnd = arrayLength
+        console.log(arrayLength)
+      } else {
+        curEnd = Math.min(i+groupMembers,arrayLength)
+      }
       var curOffset = objectArray[i].offset;
       var combinedText = objectArray.slice(i, curEnd).map(obj => obj.text).join(" ");
 
@@ -63,17 +70,17 @@ export async function POST(request: Request) {
     const data : Payload = await request.json()  
 
     if (data.youtubeLink != "") {
-      // var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript(data.youtubeLink);
+      var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript(data.youtubeLink);
     
-      // var splittedTranscript : TranscriptObject[] = await regroupTranscript(objectArray, 10);    
+      var splittedTranscript : TranscriptObject[] = await regroupTranscript(objectArray, 15);    
       
-      // const subsetDocument = splittedTranscript.slice(0, 25); // Extract the first five members
-      // const transcriptDocuments = subsetDocument.map(obj => (
-      //     {                  
-      //       page_content : obj.text,
-      //       metadata : {timestamp: obj.timestamp}                          
-      //     }
-      //   ));
+      // const subsetDocument = splittedTranscript.slice(0, 25); // Extract the first X members
+      const transcriptDocuments = splittedTranscript.map(obj => (
+          {                  
+            page_content : obj.text,
+            metadata : {timestamp: obj.timestamp}                          
+          }
+        ));
   
       // console.log(transcriptDocuments)  
       // console.log(transcriptDocuments.length)  
@@ -86,15 +93,15 @@ export async function POST(request: Request) {
       //   body: JSON.stringify(transcriptDocuments),
       // });
   
-      // response = response && await fetch('http://127.0.0.1:5000/chatWithContext', {
-      var response = await fetch('http://127.0.0.1:5000/chatWithContext', {
+      // console.log(await response.json())
+
+      // response = response && await fetch('http://127.0.0.1:5000/summarizeVectorData', {
+      var response = await fetch('http://127.0.0.1:5000/summarizeVectorData', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',        
         },
-        body: JSON.stringify({
-          message: "initialize chat with video summary"
-        }),
+        body: JSON.stringify(transcriptDocuments),
       });
 
       if (response.ok) {
@@ -110,5 +117,4 @@ export async function POST(request: Request) {
       console.log("Link not valid!")
       return Response.error()   
     }
-
 }

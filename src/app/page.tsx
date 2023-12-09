@@ -111,7 +111,7 @@ export default function Home() {
   }  
 
   const chatButtonOnClickHandler = async () => {    
-    let response = await fetch('/api/searchWithPrompt', {
+    let response = await fetch('/api/chatWithRAG', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',        
