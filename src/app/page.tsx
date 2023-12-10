@@ -131,6 +131,9 @@ export default function Home() {
 
       {landingMode == true && 
         <div className = {styles.landingPageContainer}>
+          <h2 className = {styles.logo}>
+            CastawayGPT
+          </h2>
           <input className = {styles.linkInput} type='text' placeholder='Paste your youtube link here' value={youtubeLink} onChange={linkOnChangeHandler}>
           </input>
           <button className = {styles.runButton} onClick={runButtonOnClickHandler}>
