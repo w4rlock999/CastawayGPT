@@ -66,6 +66,11 @@ def SummarizeVectorData():
         json_data = request.get_json()    
 
         videoInfo = json_data['videoInfo']
+
+        print("video ID: ")
+        print(videoInfo["videoID"])
+        videoID = videoInfo["videoID"]
+
         transcriptDocuments = json_data['transcriptDocuments']
 
         docs: List[Document] = []
@@ -118,7 +123,7 @@ def SummarizeVectorData():
         print(selected_docs)        
 
         # create summary from centroids documents
-        llm = OpenAI(model = "gpt-3.5-turbo-0613", temperature = 0, openai_api_key = ENV_OpenAI_api_key)
+        llm = OpenAI(temperature = 0, openai_api_key = ENV_OpenAI_api_key)
         summary_chain = load_summarize_chain(llm=llm, chain_type='map_reduce')
         summaryOutput = summary_chain.run(selected_docs)
         
@@ -173,12 +178,13 @@ def SummarizeVectorData():
             print(docs[0])
 
             curTimestamp = 0
-            curTimestamp = ConvertTimestampMetadataIntoSeconds(docs[0]['metadata'])
+            curTimestamp = ConvertTimestampMetadataIntoSeconds(docs[0].metadata)
+            print(curTimestamp)            
 
             # append to array of timestamps
             timestampsSuggestion.append({
                 "title" : topic,
-                "link"  : f"https://www.youtube.com/embed/{videoInfo['videoID']}fs=1&start={curTimestamp}"
+                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}"
             })
 
         response_data = {
