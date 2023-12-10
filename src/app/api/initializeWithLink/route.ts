@@ -111,24 +111,25 @@ export async function POST(request: Request) {
         ));
   
       const videoInfo = {
-        videoTitle : video?.title 
+        videoTitle : video?.title,
+        videoID : videoID 
       }    
 
       // console.log(transcriptDocuments)  
       // console.log(transcriptDocuments.length)  
     
-      // var response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',        
-      //   },
-      //   body: JSON.stringify(transcriptDocuments),
-      // });
+      var response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',        
+        },
+        body: JSON.stringify(transcriptDocuments),
+      });
   
-      // console.log(await response.json())
+      console.log(await response.json())
 
-      // response = response && await fetch('http://127.0.0.1:5000/summarizeVectorData', {
-      var response = await fetch('http://127.0.0.1:5000/summarizeVectorData', {
+      response = response && await fetch('http://127.0.0.1:5000/summarizeVectorData', {
+      // var response = await fetch('http://127.0.0.1:5000/summarizeVectorData', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',        

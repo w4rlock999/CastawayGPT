@@ -12,13 +12,24 @@ import os
 import numpy as np
 from sklearn.cluster import KMeans
 from langchain.chains.summarize import load_summarize_chain
-
+from typing import Optional
+from langchain.chains.openai_functions import create_structured_output_chain
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
 
 # Load API_KEY from .env file 
 load_dotenv()
 ENV_OpenAI_api_key = os.getenv("API_KEY")
 
 app = Flask(__name__)    
+
+def ConvertTimestampMetadataIntoSeconds(metadata):
+    outputTimestamp = 0
+    outputTimestamp += metadata['hours'] * 3600 
+    outputTimestamp += metadata['minutes'] * 60 
+    outputTimestamp += metadata['seconds']
+    return outputTimestamp
+
 
 @app.route("/", methods=['GET'])
 def Root():
@@ -33,25 +44,18 @@ def AddEmbeddingToChroma():
         for curDocument in json_data:
             print(curDocument)
             page_content = curDocument["page_content"]            
-            metadata = curDocument["metadata"]
-                        
+            metadata = curDocument["metadata"]                                    
             docs.append(Document(page_content=page_content, metadata=metadata['timestamp']))
-        # print(docs)
-        llm = OpenAI(temperature=0, openai_api_key=ENV_OpenAI_api_key)
-        num_tokens = llm.get_num_tokens(docs[0].page_content)
 
-        print(f"received {num_tokens} tokens")
+        llm = OpenAI(temperature=0, openai_api_key=ENV_OpenAI_api_key)        
 
-        # create the open-source embedding function -> change to openAI
-        # embedding_function = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+        # create the open-source embedding function
         embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
 
         # load it into Chroma
         db = Chroma.from_documents(collection_name = "transcript_db", documents = docs, embedding = embedding_function)        
-        vectors = db.get()
-        print(vectors)
 
-        return jsonify({"message": "Transcript Received Correctly"})
+        return jsonify({"message": "Transcript embedded into ChromaDB successfully"})
     
     except Exception as e:    
         return jsonify({"error": str(e)})
@@ -73,13 +77,11 @@ def SummarizeVectorData():
 
         embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
         vectors = embedding_function.embed_documents([x.page_content for x in docs])
-
-        # print(vectors)
+        
         num_clusters = 11
-        kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(vectors)
-
-        kmeans.labels_
+        kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(vectors)        
         print("KMeans calculated")
+
         # from sklearn.manifold import TSNE
         # import matplotlib.pyplot as plt
 
@@ -101,6 +103,7 @@ def SummarizeVectorData():
         # plt.title('Book Embeddings Clustered')
         # plt.show()
         
+        # find each cluster's centroid 
         closest_indices = []
 
         for i in range(num_clusters):
@@ -109,23 +112,79 @@ def SummarizeVectorData():
             closest_indices.append(closest_index)
 
         selected_indices = sorted(closest_indices)
-
         selected_docs = [docs[doc] for doc in selected_indices]
-        # print(selected_docs)
-        # print(len(selected_docs))
-        llm = OpenAI(temperature=0, openai_api_key=ENV_OpenAI_api_key)
-        summary_chain = load_summarize_chain(llm=llm, chain_type='map_reduce',
-                                    )
-        output = summary_chain.run(docs)
-        print(output)
         
+        print(f"found {len(selected_docs)} centroids documents: ")
+        print(selected_docs)        
+
+        # create summary from centroids documents
+        llm = OpenAI(model = "gpt-3.5-turbo-0613", temperature = 0, openai_api_key = ENV_OpenAI_api_key)
+        summary_chain = load_summarize_chain(llm=llm, chain_type='map_reduce')
+        summaryOutput = summary_chain.run(selected_docs)
+        
+        print("summary: ")
+        print(summaryOutput)
+        
+        json_schema = {
+            "title": "Topics",
+            "description": "Generate various unique topics from a passage.",
+            "type": "object",
+            "properties": {
+                "topics": 
+                {   
+                    "description" : "array of topics generated from the passage",
+                    "type" : "array", 
+                    "items"  : {
+                        "description" : "one unique topic generated from the passage",
+                        "type" : "string"
+                    }
+                },
+            },
+            "required": ["name", "age"],
+        }
+        promptTemplate = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are a world class algorithm for extracting topics from a passage in structured formats.",
+                ),
+                (
+                    "human", "Use the given format for 5 and only 5 topics, with each topic in 3 to 5 words, from the following input: {input}",
+                ),
+                (   
+                    "human", "Tip: Make sure to answer in the correct format and only give 5 topics, no more, no less"
+                ),
+            ]
+        )
+
+        llmChat = ChatOpenAI(model = "gpt-3.5-turbo-0613", temperature = 0, openai_api_key = ENV_OpenAI_api_key)
+        runnable = create_structured_output_chain(json_schema, llmChat, promptTemplate)
+        topics = runnable.invoke({"input": summaryOutput})
+        print(topics)
+        
+        db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)      
+        
+        timestampsSuggestion = []
+        for topic in topics['function']['topics'] :
+            # search vector store 
+            docs = db.similarity_search(query = topic, k = 1)     
+            # print results
+            print("timestamp for " + topic)        
+            print(docs[0])
+
+            curTimestamp = 0
+            curTimestamp = ConvertTimestampMetadataIntoSeconds(docs[0]['metadata'])
+
+            # append to array of timestamps
+            timestampsSuggestion.append({
+                "title" : topic,
+                "link"  : f"https://www.youtube.com/embed/{videoInfo['videoID']}fs=1&start={curTimestamp}"
+            })
+
         response_data = {
             "title": videoInfo["videoTitle"],
-            "content": output,
-            "videos": [
-                {"title": "Example Video 1", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"},
-                {"title": "Example Video 2", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=700"}
-            ]
+            "content": summaryOutput,
+            "videos": timestampsSuggestion
         }
         return jsonify(response_data)
     
