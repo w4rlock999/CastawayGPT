@@ -1,5 +1,6 @@
 import { YoutubeLoader } from "langchain/document_loaders/web/youtube";
-import { YoutubeTranscript, TranscriptResponse } from 'youtube-transcript';
+import { YoutubeTranscript, TranscriptResponse} from 'youtube-transcript';
+import { Client } from "youtubei";
 import { Chroma } from "langchain/vectorstores/chroma";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -35,6 +36,22 @@ function millisecondsToHMS(milliseconds : number): HMSTimestamp {
   };
 }
 
+const RE_YOUTUBE =
+  /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+
+function retrieveVideoId(videoId: string) {
+  if (videoId.length === 11) {
+    return videoId;
+  }
+  const matchId = videoId.match(RE_YOUTUBE);
+  if (matchId && matchId.length) {
+    return matchId[1];
+  }
+  throw new Error(
+    'Impossible to retrieve Youtube video ID.'
+  );
+}
+
 function regroupTranscript(objectArray : TranscriptResponse[], groupMembers : number): TranscriptObject[] {
 
   let arrayLength = objectArray.length
@@ -68,8 +85,19 @@ function regroupTranscript(objectArray : TranscriptResponse[], groupMembers : nu
 export async function POST(request: Request) {
 
     const data : Payload = await request.json()  
+    var videoID : string
 
-    if (data.youtubeLink != "") {
+    try {
+      videoID = await retrieveVideoId(data.youtubeLink)
+    }catch (error) {      
+      return new Response("internal server error", { status: 500, statusText: "youtube link not valid!"})             
+    }
+
+    if (videoID != "") {
+
+      const youtube = new Client()
+      const video = await youtube.getVideo(videoID)      
+
       var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript(data.youtubeLink);
     
       var splittedTranscript : TranscriptObject[] = await regroupTranscript(objectArray, 15);    
@@ -82,6 +110,10 @@ export async function POST(request: Request) {
           }
         ));
   
+      const videoInfo = {
+        videoTitle : video?.title 
+      }    
+
       // console.log(transcriptDocuments)  
       // console.log(transcriptDocuments.length)  
     
@@ -101,7 +133,10 @@ export async function POST(request: Request) {
         headers: {
           'Content-Type': 'application/json',        
         },
-        body: JSON.stringify(transcriptDocuments),
+        body: JSON.stringify({
+          videoInfo : videoInfo,
+          transcriptDocuments : transcriptDocuments
+        }),
       });
 
       if (response.ok) {

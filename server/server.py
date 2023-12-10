@@ -59,10 +59,14 @@ def AddEmbeddingToChroma():
 @app.route("/summarizeVectorData", methods=['POST'])
 def SummarizeVectorData():
     try:
-        json_data = request.get_json()                          
+        json_data = request.get_json()    
+
+        videoInfo = json_data['videoInfo']
+        transcriptDocuments = json_data['transcriptDocuments']
+
         docs: List[Document] = []
 
-        for curDocument in json_data:            
+        for curDocument in transcriptDocuments:            
             page_content = curDocument["page_content"]            
             metadata = curDocument["metadata"]                        
             docs.append(Document(page_content=page_content, metadata=metadata['timestamp']))
@@ -116,7 +120,7 @@ def SummarizeVectorData():
         print(output)
         
         response_data = {
-            "title": "Example Response",
+            "title": videoInfo["videoTitle"],
             "content": output,
             "videos": [
                 {"title": "Example Video 1", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"},
