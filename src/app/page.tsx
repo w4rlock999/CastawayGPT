@@ -36,7 +36,7 @@ function ChatResponse(props) {
       <br></br>            
       <br></br>    
       <div className = {styles.videosContainer}>
-        {props.curChatResponse.videos.map((curVideo, index) => (
+        {props.curChatResponse.videos?.map((curVideo, index) => (
           <div className = {styles.videoContainer}>
           <iframe width="270" height="180"
             src={curVideo.link} frameborder="0" allow="fullscreen">
@@ -111,12 +111,21 @@ export default function Home() {
   }  
 
   const chatButtonOnClickHandler = async () => {    
+
+    var curChatMessage = chatMessage
+    setChatMessage("")
+    console.log(curChatMessage)
+
+    const bodyPayload = {
+      chatMessage : curChatMessage
+    }
+
     let response = await fetch('/api/chatWithRAG', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',        
       },
-      body: JSON.stringify({chatMessage})
+      body: JSON.stringify(bodyPayload)
     })   
 
     if (response.ok) {
