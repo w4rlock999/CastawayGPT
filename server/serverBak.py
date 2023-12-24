@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify
 from langchain.vectorstores import Chroma
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from langchain.embeddings import OpenAIEmbeddings
@@ -16,34 +16,12 @@ from typing import Optional
 from langchain.chains.openai_functions import create_structured_output_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.memory.chat_message_histories import SQLChatMessageHistory
-import uuid
-import time
-from langchain.agents import initialize_agent
-# from langchain.tools import DuckDuckGoSearchTool
-from langchain.agents import Tool
-from langchain.tools import BaseTool
-
-def generate_session_id(string_param):
-    # current_time = int(time.time() * 1000)  # Convert current time to milliseconds
-    unique_id = uuid.uuid4().hex  # Generate a random UUID as a hex string
-
-    # Combine the current time, string parameter, and random UUID
-    # session_id = f"{current_time}_{string_param}_{unique_id}"
-
-    return unique_id
-
-
-# chat_message_history = SQLChatMessageHistory(
-#     session_id="test_session", connection_string="sqlite:///sqlite.db"
-# )
 
 # Load API_KEY from .env file 
 load_dotenv()
 ENV_OpenAI_api_key = os.getenv("API_KEY")
 
 app = Flask(__name__)    
-
 
 def ConvertTimestampMetadataIntoSeconds(metadata):
     outputTimestamp = 0
@@ -56,23 +34,6 @@ def ConvertTimestampMetadataIntoSeconds(metadata):
 @app.route("/", methods=['GET'])
 def Root():
     return jsonify({"message": "Welcome?"})
-
-@app.route("/initializeSession", methods=['POST'])
-def InitializeSession():
-    try:
-        json_data = request.get_json()
-        videoInfo = json_data["videoInfo"]
-        videoID = videoInfo["videoID"]
-        sessionID = generate_session_id(videoID)
-        print(f"current session ID {sessionID}")
-
-        response_data = {
-            "sessionID": sessionID
-        }
-        return jsonify(response_data)       
-        
-    except Exception as e:
-        return jsonify({"error" : str(e)})
 
 @app.route("/addEmbeddingToChroma", methods=['POST'])
 def AddEmbeddingToChroma():
@@ -101,33 +62,14 @@ def AddEmbeddingToChroma():
 
 @app.route("/summarizeVectorData", methods=['POST'])
 def SummarizeVectorData():
-    try:        
+    try:
         json_data = request.get_json()    
-        sessionID = json_data['sessionID']
+
         videoInfo = json_data['videoInfo']
 
         print("video ID: ")
         print(videoInfo["videoID"])
         videoID = videoInfo["videoID"]
-        session['videoID'] = videoID
-        print(session['videoID'])
-
-        # enable if we need to stop summarization 
-        # response_data = {            
-        #     "title": videoInfo["videoTitle"],
-        #     "content": "dummy summary",
-        #     "videos":  [
-        #         {"title": "Video 1", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"},
-        #         {"title": "Video 2", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=1500"}
-        #     ]
-        # }
-
-        # chat_message_history = SQLChatMessageHistory(
-        #     session_id = sessionID, connection_string="sqlite:///sqlite.db"
-        # )        
-        # chat_message_history.add_ai_message(response_data["content"])
-
-        # return jsonify(response_data)
 
         transcriptDocuments = json_data['transcriptDocuments']
 
@@ -170,8 +112,6 @@ def SummarizeVectorData():
         closest_indices = []
 
         for i in range(num_clusters):
-            if i == 3 :
-                break
             distances = np.linalg.norm(vectors - kmeans.cluster_centers_[i], axis=1)
             closest_index = np.argmin(distances)
             closest_indices.append(closest_index)
@@ -235,7 +175,7 @@ def SummarizeVectorData():
             docs = db.similarity_search(query = topic, k = 1)     
             # print results
             print("timestamp for " + topic)        
-            print(docs)            
+            print(docs[0])
 
             curTimestamp = 0
             curTimestamp = ConvertTimestampMetadataIntoSeconds(docs[0].metadata)
@@ -244,7 +184,7 @@ def SummarizeVectorData():
             # append to array of timestamps
             timestampsSuggestion.append({
                 "title" : topic,
-                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
+                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}"
             })
 
         response_data = {
@@ -252,12 +192,6 @@ def SummarizeVectorData():
             "content": summaryOutput,
             "videos": timestampsSuggestion
         }
-
-        chat_message_history = SQLChatMessageHistory(
-            session_id = sessionID, connection_string="sqlite:///sqlite.db"
-        )        
-        chat_message_history.add_ai_message(response_data["content"])
-
         return jsonify(response_data)
     
     except Exception as e:
@@ -267,92 +201,28 @@ def SummarizeVectorData():
 def ChatWithContext():
     try:
         json_data = request.get_json()
-        
-        print(json_data['sessionID'])
         print(json_data['message'])
         # print("request message: " + json_data.message)
 
-        sessionID = json_data['sessionID']
-        chat_message_history = SQLChatMessageHistory(
-            session_id = sessionID, connection_string="sqlite:///sqlite.db"
-        ) 
+        print("")
+        print("context search: " + json_data['message'])
+        embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
+        db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)      
 
-        print(chat_message_history.messages)
-
-        # print("")
-        # print("context search: " + json_data['message'])
-        # embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
-        # db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)      
-
-        # # search vector store 
-        # docs = db.similarity_search(json_data['message']) 
-
-        # # print results        
-        # # print(docs[0].page_content)
-        # # print(docs[1].page_content)
-        # # print(docs[2].page_content)
-        
-        # videoID = ''
-        # print(session)
-        # if 'videoID' in session:            
-        #     print("video ID is in session!")
-        #     videoID = session['videoID']
-        #     print (videoID)
-
-        # timestampsSuggestion = []
-        # for index, curDoc in enumerate(docs) :
-        #     print(f"cur document found: {index}")
-        #     print(curDoc.page_content) 
-        #     print("\n")
-        #     curTimestamp = 0
-        #     curTimestamp = ConvertTimestampMetadataIntoSeconds(curDoc.metadata)
-        #     timestampsSuggestion.append({
-        #         "title" : "topic",
-        #         "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}"
-        #     })
-
-        # tools = [search, random_tool, life_tool]
-
-        # # conversational agent memory
-        # memory = ConversationBufferWindowMemory(
-        #     memory_key='chat_history',
-        #     k=3,
-        #     return_messages=True
-        # )
-
-        # Set up the turbo LLM
-        turbo_llm = ChatOpenAI(
-            temperature=0.3,
-            model_name='gpt-3.5-turbo',
-            openai_api_key=ENV_OpenAI_api_key
-        )
-
-        # search = DuckDuckGoSearchTool()
-        # # defining a single tool
-        # tools = [
-        #     Tool(
-        #         name = "search",
-        #         func=search.run,
-        #         description="useful for when you need to answer questions about current events. You should ask targeted questions"
-        #     )
-        # ]
-        tools =[]
-
-        # create our agent
-        conversational_agent = initialize_agent(
-            agent='chat-conversational-react-description',
-            tools=tools,
-            llm=turbo_llm,
-            verbose=True,
-            max_iterations=3,
-            early_stopping_method='generate',
-            memory=chat_message_history
-        )
+        # search vector store 
+        docs = db.similarity_search(json_data['message'])        
+        # print results        
+        print(docs[0].page_content)
+        print(docs[1].page_content)
+        print(docs[2].page_content)
 
         response_data = {
             "title": "Example Response",
             "content": "This is a sample response with video timestamps.",
-            "videos": []
+            "videos": [
+                {"title": "Video 1", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"},
+                {"title": "Video 2", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=700"}
+            ]
         }
         return jsonify(response_data)
         return jsonify({"response" : "success"})

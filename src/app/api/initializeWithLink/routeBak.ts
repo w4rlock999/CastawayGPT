@@ -4,7 +4,6 @@ import { Client } from "youtubei";
 import { Chroma } from "langchain/vectorstores/chroma";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { cookies } from 'next/headers'
 import * as fs from "fs";
 
 interface Payload {
@@ -118,36 +117,15 @@ export async function POST(request: Request) {
 
       // console.log(transcriptDocuments)  
       // console.log(transcriptDocuments.length)  
-      
-      var response = await fetch('http://127.0.0.1:5000/initializeSession', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',        
-        },
-        body: JSON.stringify({
-          videoInfo : videoInfo
-        }),
-      });
-
-      var sessionID = ""
-      if (response.ok) {
-        const result = await response.json()
-        sessionID = result.sessionID
-        console.log("session ID successfully fetched: " + sessionID)
-        cookies().set('sessionID', sessionID)
-      } else {
-        console.log("failed fetching sessionID")
-      }
-
-      response = response && await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
+    
+      var response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',        
         },
         body: JSON.stringify(transcriptDocuments),
       });
-      
-      console.log("embedding result")
+  
       console.log(await response.json())
 
       response = response && await fetch('http://127.0.0.1:5000/summarizeVectorData', {
@@ -157,7 +135,6 @@ export async function POST(request: Request) {
           'Content-Type': 'application/json',        
         },
         body: JSON.stringify({
-          sessionID : sessionID,
           videoInfo : videoInfo,
           transcriptDocuments : transcriptDocuments
         }),
