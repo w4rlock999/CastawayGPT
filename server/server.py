@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify
 from langchain.vectorstores import Chroma
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from langchain.embeddings import OpenAIEmbeddings
@@ -108,9 +108,7 @@ def SummarizeVectorData():
 
         print("video ID: ")
         print(videoInfo["videoID"])
-        videoID = videoInfo["videoID"]
-        session['videoID'] = videoID
-        print(session['videoID'])
+        videoID = videoInfo["videoID"]        
 
         # enable if we need to stop summarization 
         # response_data = {            
@@ -141,7 +139,7 @@ def SummarizeVectorData():
         embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
         vectors = embedding_function.embed_documents([x.page_content for x in docs])
         
-        num_clusters = 11
+        num_clusters = 3
         kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(vectors)        
         print("KMeans calculated")
 
@@ -170,8 +168,6 @@ def SummarizeVectorData():
         closest_indices = []
 
         for i in range(num_clusters):
-            if i == 3 :
-                break
             distances = np.linalg.norm(vectors - kmeans.cluster_centers_[i], axis=1)
             closest_index = np.argmin(distances)
             closest_indices.append(closest_index)
