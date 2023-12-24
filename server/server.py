@@ -19,6 +19,10 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.memory.chat_message_histories import SQLChatMessageHistory
 import uuid
 import time
+from langchain.agents import initialize_agent
+# from langchain.tools import DuckDuckGoSearchTool
+from langchain.agents import Tool
+from langchain.tools import BaseTool
 
 def generate_session_id(string_param):
     # current_time = int(time.time() * 1000)  # Convert current time to milliseconds
@@ -109,21 +113,21 @@ def SummarizeVectorData():
         print(session['videoID'])
 
         # enable if we need to stop summarization 
-        response_data = {            
-            "title": videoInfo["videoTitle"],
-            "content": "dummy summary",
-            "videos":  [
-                {"title": "Video 1", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"},
-                {"title": "Video 2", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=1500"}
-            ]
-        }
+        # response_data = {            
+        #     "title": videoInfo["videoTitle"],
+        #     "content": "dummy summary",
+        #     "videos":  [
+        #         {"title": "Video 1", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=500"},
+        #         {"title": "Video 2", "link": "https://www.youtube.com/embed/JN3KPFbWCy8?fs=1&start=1500"}
+        #     ]
+        # }
 
-        chat_message_history = SQLChatMessageHistory(
-            session_id = sessionID, connection_string="sqlite:///sqlite.db"
-        )        
-        chat_message_history.add_ai_message(response_data["content"])
+        # chat_message_history = SQLChatMessageHistory(
+        #     session_id = sessionID, connection_string="sqlite:///sqlite.db"
+        # )        
+        # chat_message_history.add_ai_message(response_data["content"])
 
-        return jsonify(response_data)
+        # return jsonify(response_data)
 
         transcriptDocuments = json_data['transcriptDocuments']
 
@@ -248,6 +252,12 @@ def SummarizeVectorData():
             "content": summaryOutput,
             "videos": timestampsSuggestion
         }
+
+        chat_message_history = SQLChatMessageHistory(
+            session_id = sessionID, connection_string="sqlite:///sqlite.db"
+        )        
+        chat_message_history.add_ai_message(response_data["content"])
+
         return jsonify(response_data)
     
     except Exception as e:
@@ -269,42 +279,80 @@ def ChatWithContext():
 
         print(chat_message_history.messages)
 
-        print("")
-        print("context search: " + json_data['message'])
-        embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
-        db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)      
+        # print("")
+        # print("context search: " + json_data['message'])
+        # embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
+        # db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)      
 
-        # search vector store 
-        docs = db.similarity_search(json_data['message']) 
+        # # search vector store 
+        # docs = db.similarity_search(json_data['message']) 
 
-        # print results        
-        # print(docs[0].page_content)
-        # print(docs[1].page_content)
-        # print(docs[2].page_content)
+        # # print results        
+        # # print(docs[0].page_content)
+        # # print(docs[1].page_content)
+        # # print(docs[2].page_content)
         
-        videoID = ''
-        print(session)
-        if 'videoID' in session:            
-            print("video ID is in session!")
-            videoID = session['videoID']
-            print (videoID)
+        # videoID = ''
+        # print(session)
+        # if 'videoID' in session:            
+        #     print("video ID is in session!")
+        #     videoID = session['videoID']
+        #     print (videoID)
 
-        timestampsSuggestion = []
-        for index, curDoc in enumerate(docs) :
-            print(f"cur document found: {index}")
-            print(curDoc.page_content) 
-            print("\n")
-            curTimestamp = 0
-            curTimestamp = ConvertTimestampMetadataIntoSeconds(curDoc.metadata)
-            timestampsSuggestion.append({
-                "title" : "topic",
-                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}"
-            })
+        # timestampsSuggestion = []
+        # for index, curDoc in enumerate(docs) :
+        #     print(f"cur document found: {index}")
+        #     print(curDoc.page_content) 
+        #     print("\n")
+        #     curTimestamp = 0
+        #     curTimestamp = ConvertTimestampMetadataIntoSeconds(curDoc.metadata)
+        #     timestampsSuggestion.append({
+        #         "title" : "topic",
+        #         "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}"
+        #     })
+
+        # tools = [search, random_tool, life_tool]
+
+        # # conversational agent memory
+        # memory = ConversationBufferWindowMemory(
+        #     memory_key='chat_history',
+        #     k=3,
+        #     return_messages=True
+        # )
+
+        # Set up the turbo LLM
+        turbo_llm = ChatOpenAI(
+            temperature=0.3,
+            model_name='gpt-3.5-turbo',
+            openai_api_key=ENV_OpenAI_api_key
+        )
+
+        # search = DuckDuckGoSearchTool()
+        # # defining a single tool
+        # tools = [
+        #     Tool(
+        #         name = "search",
+        #         func=search.run,
+        #         description="useful for when you need to answer questions about current events. You should ask targeted questions"
+        #     )
+        # ]
+        tools =[]
+
+        # create our agent
+        conversational_agent = initialize_agent(
+            agent='chat-conversational-react-description',
+            tools=tools,
+            llm=turbo_llm,
+            verbose=True,
+            max_iterations=3,
+            early_stopping_method='generate',
+            memory=chat_message_history
+        )
 
         response_data = {
             "title": "Example Response",
             "content": "This is a sample response with video timestamps.",
-            "videos": timestampsSuggestion
+            "videos": []
         }
         return jsonify(response_data)
         return jsonify({"response" : "success"})
