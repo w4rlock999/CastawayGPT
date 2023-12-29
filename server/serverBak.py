@@ -83,7 +83,7 @@ def SummarizeVectorData():
         embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
         vectors = embedding_function.embed_documents([x.page_content for x in docs])
         
-        num_clusters = 11
+        num_clusters = 3
         kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(vectors)        
         print("KMeans calculated")
 

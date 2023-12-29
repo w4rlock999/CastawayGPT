@@ -139,16 +139,16 @@ export async function POST(request: Request) {
         console.log("failed fetching sessionID")
       }
 
-      response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',        
-        },
-        body: JSON.stringify(transcriptDocuments),
-      });
+      // response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',        
+      //   },
+      //   body: JSON.stringify(transcriptDocuments),
+      // });
       
-      console.log("embedding result")
-      console.log(await response.json())
+      // console.log("embedding result")
+      // console.log(await response.json())
 
       response = await fetch('http://127.0.0.1:5000/summarizeVectorData', {    
         method: 'POST',

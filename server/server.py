@@ -16,6 +16,8 @@ from typing import Optional
 from langchain.chains.openai_functions import create_structured_output_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from langchain.memory import ConversationBufferMemory
+from langchain.memory import ConversationBufferWindowMemory
 from langchain.memory.chat_message_histories import SQLChatMessageHistory
 import uuid
 import time
@@ -92,7 +94,7 @@ def AddEmbeddingToChroma():
         embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
 
         # load it into Chroma
-        db = Chroma.from_documents(collection_name = "transcript_db", documents = docs, embedding = embedding_function)        
+        db = Chroma.from_documents(persist_directory="./chroma_db", documents = docs, embedding = embedding_function)        
 
         return jsonify({"message": "Transcript embedded into ChromaDB successfully"})
     
@@ -179,80 +181,87 @@ def SummarizeVectorData():
         print(selected_docs)        
 
         # create summary from centroids documents
-        llm = OpenAI(temperature = 0, openai_api_key = ENV_OpenAI_api_key)
-        summary_chain = load_summarize_chain(llm=llm, chain_type='map_reduce')
-        summaryOutput = summary_chain.run(selected_docs)
+        # llm = OpenAI(temperature = 0, openai_api_key = ENV_OpenAI_api_key)
+        # summary_chain = load_summarize_chain(llm=llm, chain_type='map_reduce')
+        # summaryOutput = summary_chain.run(selected_docs)
         
-        print("summary: ")
-        print(summaryOutput)
+        # print("summary: ")
+        # print(summaryOutput)
         
-        json_schema = {
-            "title": "Topics",
-            "description": "Generate various unique topics from a passage.",
-            "type": "object",
-            "properties": {
-                "topics": 
-                {   
-                    "description" : "array of topics generated from the passage",
-                    "type" : "array", 
-                    "items"  : {
-                        "description" : "one unique topic generated from the passage",
-                        "type" : "string"
-                    }
-                },
-            },
-            "required": ["name", "age"],
-        }
-        promptTemplate = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    "You are a world class algorithm for extracting topics from a passage in structured formats.",
-                ),
-                (
-                    "human", "Use the given format for 5 and only 5 topics, with each topic in 3 to 5 words, from the following input: {input}",
-                ),
-                (   
-                    "human", "Tip: Make sure to answer in the correct format and only give 5 topics, no more, no less"
-                ),
-            ]
-        )
+        # json_schema = {
+        #     "title": "Topics",
+        #     "description": "Generate various unique topics from a passage.",
+        #     "type": "object",
+        #     "properties": {
+        #         "topics": 
+        #         {   
+        #             "description" : "array of topics generated from the passage",
+        #             "type" : "array", 
+        #             "items"  : {
+        #                 "description" : "one unique topic generated from the passage",
+        #                 "type" : "string"
+        #             }
+        #         },
+        #     },
+        #     "required": ["name", "age"],
+        # }
+        # promptTemplate = ChatPromptTemplate.from_messages(
+        #     [
+        #         (
+        #             "system",
+        #             "You are a world class algorithm for extracting topics from a passage in structured formats.",
+        #         ),
+        #         (
+        #             "human", "Use the given format for 5 and only 5 topics, with each topic in 3 to 5 words, from the following input: {input}",
+        #         ),
+        #         (   
+        #             "human", "Tip: Make sure to answer in the correct format and only give 5 topics, no more, no less"
+        #         ),
+        #     ]
+        # )
 
-        llmChat = ChatOpenAI(model = "gpt-3.5-turbo-0613", temperature = 0, openai_api_key = ENV_OpenAI_api_key)
-        runnable = create_structured_output_chain(json_schema, llmChat, promptTemplate)
-        topics = runnable.invoke({"input": summaryOutput})
-        print(topics)
+        # llmChat = ChatOpenAI(model = "gpt-3.5-turbo-0613", temperature = 0, openai_api_key = ENV_OpenAI_api_key)
+        # runnable = create_structured_output_chain(json_schema, llmChat, promptTemplate)
+        # topics = runnable.invoke({"input": summaryOutput})
+        # print(topics)
         
-        db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)      
+        # db = Chroma(persist_directory="./chroma_db", embedding_function = embedding_function)      
         
-        timestampsSuggestion = []
-        for topic in topics['function']['topics'] :
-            # search vector store 
-            docs = db.similarity_search(query = topic, k = 1)     
-            # print results
-            print("timestamp for " + topic)        
-            print(docs)            
+        # timestampsSuggestion = []
+        # for topic in topics['function']['topics'] :
+        #     # search vector store 
+        #     docs = db.similarity_search(query = topic, k = 1)     
+        #     # print results
+        #     print("timestamp for " + topic)        
+        #     print(docs)            
 
-            curTimestamp = 0
-            curTimestamp = ConvertTimestampMetadataIntoSeconds(docs[0].metadata)
-            print(curTimestamp)            
+        #     curTimestamp = 0
+        #     curTimestamp = ConvertTimestampMetadataIntoSeconds(docs[0].metadata)
+        #     print(curTimestamp)            
 
-            # append to array of timestamps
-            timestampsSuggestion.append({
-                "title" : topic,
-                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
-            })
+        #     # append to array of timestamps
+        #     timestampsSuggestion.append({
+        #         "title" : topic,
+        #         "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
+        #     })
+
+        # response_data = {
+        #     "title": videoInfo["videoTitle"],
+        #     "content": summaryOutput,
+        #     "videos": timestampsSuggestion
+        # }
 
         response_data = {
             "title": videoInfo["videoTitle"],
-            "content": summaryOutput,
-            "videos": timestampsSuggestion
+            "content": "content",
+            "videos": []
         }
 
         chat_message_history = SQLChatMessageHistory(
             session_id = sessionID, connection_string="sqlite:///sqlite.db"
         )        
-        chat_message_history.add_ai_message(response_data["content"])
+        # chat_message_history.add_ai_message(f"this is the summary of the podcast: {response_data['content']}")
+        chat_message_history.add_ai_message(f"this is the summary of the podcast: This passage discusses the importance of language and how it can be used to create a sense of community, as well as the current multipolar world which has made it more difficult for people to come together. It also mentions the story of a World Champion who wrote a book about how to deal with bullies, which is an inspiration to many people around the world.")        
 
         return jsonify(response_data)
     
@@ -265,85 +274,49 @@ def ChatWithContext():
         json_data = request.get_json()
         
         print(json_data['sessionID'])
-        print(json_data['message'])
-        # print("request message: " + json_data.message)
+        print(json_data['message'])        
 
         sessionID = json_data['sessionID']
-        chat_message_history = SQLChatMessageHistory(
+        SQLmessages = SQLChatMessageHistory(
             session_id = sessionID, connection_string="sqlite:///sqlite.db"
-        ) 
+        )                   
+        print(SQLmessages.messages)
+        # memory = ConversationBufferMemory(memory_key="chat_history", chat_memory=SQLmessages)
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
-        print(chat_message_history.messages)
-
-        # print("")
-        # print("context search: " + json_data['message'])
-        # embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
-        # db = Chroma(collection_name="transcript_db", embedding_function = embedding_function)      
-
-        # # search vector store 
-        # docs = db.similarity_search(json_data['message']) 
-
-        # # print results        
-        # # print(docs[0].page_content)
-        # # print(docs[1].page_content)
-        # # print(docs[2].page_content)
-        
-        # videoID = ''
-        # print(session)
-        # if 'videoID' in session:            
-        #     print("video ID is in session!")
-        #     videoID = session['videoID']
-        #     print (videoID)
-
-        # timestampsSuggestion = []
-        # for index, curDoc in enumerate(docs) :
-        #     print(f"cur document found: {index}")
-        #     print(curDoc.page_content) 
-        #     print("\n")
-        #     curTimestamp = 0
-        #     curTimestamp = ConvertTimestampMetadataIntoSeconds(curDoc.metadata)
-        #     timestampsSuggestion.append({
-        #         "title" : "topic",
-        #         "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}"
-        #     })
-
-        # tools = [search, random_tool, life_tool]
-
-        # # conversational agent memory
         # memory = ConversationBufferWindowMemory(
         #     memory_key='chat_history',
         #     k=3,
         #     return_messages=True
         # )
 
-        # Set up the turbo LLM
-        turbo_llm = ChatOpenAI(
+        # Set up the LLM
+        llm = ChatOpenAI(
             temperature=0.3,
             model_name='gpt-3.5-turbo',
             openai_api_key=ENV_OpenAI_api_key
         )
 
-        # search = DuckDuckGoSearchTool()
-        # # defining a single tool
-        # tools = [
-        #     Tool(
-        #         name = "search",
-        #         func=search.run,
-        #         description="useful for when you need to answer questions about current events. You should ask targeted questions"
-        #     )
-        # ]
         tools =[]
 
         # create our agent
-        conversational_agent = initialize_agent(
+        agent = initialize_agent(
             agent='chat-conversational-react-description',
             tools=tools,
-            llm=turbo_llm,
+            llm=llm,
             verbose=True,
             max_iterations=3,
             early_stopping_method='generate',
-            memory=chat_message_history
+            memory=memory
         )
+
+        input = json_data['message']
+        # out = agent({"input": input, "chat_history": []})
+        out = agent(input)
+
+        print(out)
+
+        print(SQLmessages.messages)
 
         response_data = {
             "title": "Example Response",
