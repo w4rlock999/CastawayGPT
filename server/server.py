@@ -12,6 +12,7 @@ import os
 import numpy as np
 from sklearn.cluster import KMeans
 from langchain.chains.summarize import load_summarize_chain
+from langchain.chains import LLMChain
 from typing import Optional
 from langchain.chains.openai_functions import create_structured_output_chain
 from langchain.chat_models import ChatOpenAI
@@ -23,7 +24,7 @@ import uuid
 import time
 from langchain.agents import initialize_agent
 # from langchain.tools import DuckDuckGoSearchTool
-from langchain.agents import Tool
+from langchain.agents import AgentExecutor, Tool, ConversationalChatAgent
 from langchain.tools import BaseTool
 
 def generate_session_id(string_param):
@@ -261,7 +262,7 @@ def SummarizeVectorData():
             session_id = sessionID, connection_string="sqlite:///sqlite.db"
         )        
         # chat_message_history.add_ai_message(f"this is the summary of the podcast: {response_data['content']}")
-        chat_message_history.add_ai_message(f"this is the summary of the podcast: This passage discusses the importance of language and how it can be used to create a sense of community, as well as the current multipolar world which has made it more difficult for people to come together. It also mentions the story of a World Champion who wrote a book about how to deal with bullies, which is an inspiration to many people around the world.")        
+        chat_message_history.add_ai_message(f"this is the summary of the podcast: This podcast discusses the importance of language and how it can be used to create a sense of community, as well as the current multipolar world which has made it more difficult for people to come together. It also mentions the story of a World Champion who wrote a book about how to deal with bullies, which is an inspiration to many people around the world.")        
 
         return jsonify(response_data)
     
@@ -270,6 +271,27 @@ def SummarizeVectorData():
     
 @app.route("/chatWithContext", methods=['POST'])
 def ChatWithContext():
+
+
+    embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
+    db = Chroma(persist_directory="./chroma_db", embedding_function = embedding_function)      
+
+    def TranscriptSimilaritySearch(input=""):
+        docs = db.similarity_search(query = input, k = 3)
+
+        output = ""
+        for index, doc in enumerate(docs) :
+            # print(doc.page_content)
+            output += f"Found Possible Context {index+1} : {doc.page_content} \n\n"
+        
+        return output
+    
+    transcript_search_tool = Tool(
+        name='Transcript Similarity Search',
+        func= TranscriptSimilaritySearch,
+        description="Useful for when you need additional context from the podcast transcript to answer questions about the podcast content. input should be one topic you need to find out about"
+    )
+
     try:
         json_data = request.get_json()
         
@@ -282,14 +304,42 @@ def ChatWithContext():
         )                   
         print(SQLmessages.messages)
         # memory = ConversationBufferMemory(memory_key="chat_history", chat_memory=SQLmessages)
-        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        # memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        memory = ConversationBufferMemory(memory_key="chat_history", chat_memory=SQLmessages, return_messages=True)
 
-        # memory = ConversationBufferWindowMemory(
-        #     memory_key='chat_history',
-        #     k=3,
-        #     return_messages=True
-        # )
+        print("building prompt")
 
+        CUSTOM_SUFFIX = """TOOLS
+        ------
+        Assistant can ask the user to use tools to look up information that may be helpful in answering the users original question. The tools the human can use are:
+
+        {{tools}}
+
+        {format_instructions}
+
+        CHAT HISTORY
+        --------------------
+        Here is the previous conversation between you (AI) and the user (Human), use this as a basis for answering next user's input
+        {chat_history}
+
+        USER'S INPUT
+        --------------------
+        Here is the user's input (remember to respond with a markdown code snippet of a json blob with a single action, and NOTHING else):
+
+        {{{{input}}}}"""
+
+        tools = [transcript_search_tool]
+        # tools = []
+
+        # print(CUSTOM_SUFFIX)
+
+        prompt = ConversationalChatAgent.create_prompt(
+            tools                        
+        )
+
+        print("prompt created")
+
+        print("setting up LLM")
         # Set up the LLM
         llm = ChatOpenAI(
             temperature=0.3,
@@ -297,25 +347,39 @@ def ChatWithContext():
             openai_api_key=ENV_OpenAI_api_key
         )
 
-        tools =[]
-
-        # create our agent
-        agent = initialize_agent(
-            agent='chat-conversational-react-description',
-            tools=tools,
-            llm=llm,
-            verbose=True,
-            max_iterations=3,
-            early_stopping_method='generate',
-            memory=memory
+        llm_chain = LLMChain(llm=llm, prompt=prompt)
+        agent = ConversationalChatAgent(llm_chain=llm_chain, tools=tools, verbose=True)
+        agent_chain = AgentExecutor.from_agent_and_tools(
+            agent=agent, tools=tools, verbose=True, memory=memory, handle_parsing_errors=True
         )
+
+
+        # # create our agent
+        # conversational_agent = initialize_agent(
+        #     agent='conversational-react-description', 
+        #     tools=tools, 
+        #     llm=llm,
+        #     verbose=True,
+        #     max_iterations=3,
+        #     memory=memory,
+        # )
+
+        # agent = initialize_agent(
+        #     agent='chat-conversational-react-description',
+        #     tools=tools,
+        #     llm=llm,
+        #     verbose=True,
+        #     max_iterations=3,
+        #     early_stopping_method='generate',
+        #     memory=memory
+        # )
 
         input = json_data['message']
         # out = agent({"input": input, "chat_history": []})
-        out = agent(input)
-
+        # out = agent(input)
+        out = agent_chain.run(input=input)
         print(out)
-
+        
         print(SQLmessages.messages)
 
         response_data = {
