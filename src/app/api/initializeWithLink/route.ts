@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     if (videoID != "") {
 
       const youtube = new Client()
-      const video = await youtube.getVideo(videoID)      
+      const video = await youtube.getVideo(videoID)     
 
       var objectArray: TranscriptResponse[] = await YoutubeTranscript.fetchTranscript(data.youtubeLink);
     
@@ -135,17 +135,19 @@ export async function POST(request: Request) {
         sessionID = result.sessionID
         console.log("session ID successfully fetched: " + sessionID)
         cookies().set('sessionID', sessionID)
+        cookies().set('videoID', videoID)
+        cookies().set('videoTitle', video.title)
       } else {
         console.log("failed fetching sessionID")
       }
 
-      // response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',        
-      //   },
-      //   body: JSON.stringify(transcriptDocuments),
-      // });
+      response = await fetch('http://127.0.0.1:5000/addEmbeddingToChroma', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',        
+        },
+        body: JSON.stringify(transcriptDocuments),
+      });
       
       // console.log("embedding result")
       // console.log(await response.json())

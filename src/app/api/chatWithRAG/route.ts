@@ -16,6 +16,25 @@ export async function POST(request: Request) {
       console.log("cannot find sessionID in the cookies")
     }
 
+    var videoID 
+    if (cookies().has('videoID')) {
+      videoID = cookies().get('videoID')      
+    } else {
+      console.log("cannot find videoID in the cookies")
+    }
+
+    var videoTitle
+    if (cookies().has('videoTitle')) {
+      videoTitle = cookies().get('videoTitle')      
+    } else {
+      console.log("cannot find videoTitle in the cookies")
+    }
+
+    const videoInfo = {
+      videoTitle : videoTitle?.value,
+      videoID : videoID?.value 
+    }  
+
     if (data.chatMessage != "") {
 
         console.log("chat: " + data.chatMessage)
@@ -27,7 +46,8 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({
               sessionID: sessionID.value,
-              message: data.chatMessage           
+              message: data.chatMessage,
+              videoInfo: videoInfo
             }),
           });         
         }catch (error) {      

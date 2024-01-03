@@ -182,87 +182,87 @@ def SummarizeVectorData():
         print(selected_docs)        
 
         # create summary from centroids documents
-        # llm = OpenAI(temperature = 0, openai_api_key = ENV_OpenAI_api_key)
-        # summary_chain = load_summarize_chain(llm=llm, chain_type='map_reduce')
-        # summaryOutput = summary_chain.run(selected_docs)
+        llm = OpenAI(temperature = 0, openai_api_key = ENV_OpenAI_api_key)
+        summary_chain = load_summarize_chain(llm=llm, chain_type='map_reduce')
+        summaryOutput = summary_chain.run(selected_docs)
         
-        # print("summary: ")
-        # print(summaryOutput)
+        print("summary: ")
+        print(summaryOutput)
         
-        # json_schema = {
-        #     "title": "Topics",
-        #     "description": "Generate various unique topics from a passage.",
-        #     "type": "object",
-        #     "properties": {
-        #         "topics": 
-        #         {   
-        #             "description" : "array of topics generated from the passage",
-        #             "type" : "array", 
-        #             "items"  : {
-        #                 "description" : "one unique topic generated from the passage",
-        #                 "type" : "string"
-        #             }
-        #         },
-        #     },
-        #     "required": ["name", "age"],
-        # }
-        # promptTemplate = ChatPromptTemplate.from_messages(
-        #     [
-        #         (
-        #             "system",
-        #             "You are a world class algorithm for extracting topics from a passage in structured formats.",
-        #         ),
-        #         (
-        #             "human", "Use the given format for 5 and only 5 topics, with each topic in 3 to 5 words, from the following input: {input}",
-        #         ),
-        #         (   
-        #             "human", "Tip: Make sure to answer in the correct format and only give 5 topics, no more, no less"
-        #         ),
-        #     ]
-        # )
+        json_schema = {
+            "title": "Topics",
+            "description": "Generate various unique topics from a passage.",
+            "type": "object",
+            "properties": {
+                "topics": 
+                {   
+                    "description" : "array of topics generated from the passage",
+                    "type" : "array", 
+                    "items"  : {
+                        "description" : "one unique topic generated from the passage",
+                        "type" : "string"
+                    }
+                },
+            },
+            "required": ["name", "age"],
+        }
+        promptTemplate = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are a world class algorithm for extracting topics from a passage in structured formats.",
+                ),
+                (
+                    "human", "Use the given format for 5 and only 5 topics, with each topic in 3 to 5 words, from the following input: {input}",
+                ),
+                (   
+                    "human", "Tip: Make sure to answer in the correct format and only give 5 topics, no more, no less"
+                ),
+            ]
+        )
 
-        # llmChat = ChatOpenAI(model = "gpt-3.5-turbo-0613", temperature = 0, openai_api_key = ENV_OpenAI_api_key)
-        # runnable = create_structured_output_chain(json_schema, llmChat, promptTemplate)
-        # topics = runnable.invoke({"input": summaryOutput})
-        # print(topics)
+        llmChat = ChatOpenAI(model = "gpt-3.5-turbo-0613", temperature = 0, openai_api_key = ENV_OpenAI_api_key)
+        runnable = create_structured_output_chain(json_schema, llmChat, promptTemplate)
+        topics = runnable.invoke({"input": summaryOutput})
+        print(topics)
         
-        # db = Chroma(persist_directory="./chroma_db", embedding_function = embedding_function)      
+        db = Chroma(persist_directory="./chroma_db", embedding_function = embedding_function)      
         
-        # timestampsSuggestion = []
-        # for topic in topics['function']['topics'] :
-        #     # search vector store 
-        #     docs = db.similarity_search(query = topic, k = 1)     
-        #     # print results
-        #     print("timestamp for " + topic)        
-        #     print(docs)            
+        timestampsSuggestion = []
+        for topic in topics['function']['topics'] :
+            # search vector store 
+            docs = db.similarity_search(query = topic, k = 1)     
+            # print results
+            print("timestamp for " + topic)        
+            print(docs)            
 
-        #     curTimestamp = 0
-        #     curTimestamp = ConvertTimestampMetadataIntoSeconds(docs[0].metadata)
-        #     print(curTimestamp)            
+            curTimestamp = 0
+            curTimestamp = ConvertTimestampMetadataIntoSeconds(docs[0].metadata)
+            print(curTimestamp)            
 
-        #     # append to array of timestamps
-        #     timestampsSuggestion.append({
-        #         "title" : topic,
-        #         "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
-        #     })
-
-        # response_data = {
-        #     "title": videoInfo["videoTitle"],
-        #     "content": summaryOutput,
-        #     "videos": timestampsSuggestion
-        # }
+            # append to array of timestamps
+            timestampsSuggestion.append({
+                "title" : topic,
+                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
+            })
 
         response_data = {
             "title": videoInfo["videoTitle"],
-            "content": "content",
-            "videos": []
+            "content": summaryOutput,
+            "videos": timestampsSuggestion
         }
+
+        # response_data = {
+        #     "title": videoInfo["videoTitle"],
+        #     "content": "content",
+        #     "videos": []
+        # }
 
         chat_message_history = SQLChatMessageHistory(
             session_id = sessionID, connection_string="sqlite:///sqlite.db"
         )        
-        # chat_message_history.add_ai_message(f"this is the summary of the podcast: {response_data['content']}")
-        chat_message_history.add_ai_message(f"this is the summary of the podcast: This podcast discusses the importance of language and how it can be used to create a sense of community, as well as the current multipolar world which has made it more difficult for people to come together. It also mentions the story of a World Champion who wrote a book about how to deal with bullies, which is an inspiration to many people around the world.")        
+        chat_message_history.add_ai_message(f"this is the summary of the podcast: {response_data['content']}")
+        # chat_message_history.add_ai_message(f"this is the summary of the podcast: This podcast discusses the importance of language and how it can be used to create a sense of community, as well as the current multipolar world which has made it more difficult for people to come together. It also mentions the story of a World Champion who wrote a book about how to deal with bullies, which is an inspiration to many people around the world.")        
 
         return jsonify(response_data)
     
@@ -271,19 +271,34 @@ def SummarizeVectorData():
     
 @app.route("/chatWithContext", methods=['POST'])
 def ChatWithContext():
+    json_data = request.get_json()
 
+    videoOutput = []
 
     embedding_function = OpenAIEmbeddings(openai_api_key=ENV_OpenAI_api_key)
     db = Chroma(persist_directory="./chroma_db", embedding_function = embedding_function)      
+    
+    videoInfo = json_data['videoInfo']
+
+    print("video ID: ")
+    print(videoInfo["videoID"])
+    videoID = videoInfo["videoID"]  
 
     def TranscriptSimilaritySearch(input=""):
         docs = db.similarity_search(query = input, k = 3)
 
         output = ""
-        for index, doc in enumerate(docs) :
-            # print(doc.page_content)
+        for index, doc in enumerate(docs) :            
             output += f"Found Possible Context {index+1} : {doc.page_content} \n\n"
-        
+            curTimestamp = 0
+            curTimestamp = ConvertTimestampMetadataIntoSeconds(doc.metadata)                      
+
+            # append to array of timestamps
+            videoOutput.append({
+                "title" : "",
+                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
+            })
+
         return output
     
     transcript_search_tool = Tool(
@@ -293,7 +308,6 @@ def ChatWithContext():
     )
 
     try:
-        json_data = request.get_json()
         
         print(json_data['sessionID'])
         print(json_data['message'])        
@@ -303,12 +317,11 @@ def ChatWithContext():
             session_id = sessionID, connection_string="sqlite:///sqlite.db"
         )                   
         print(SQLmessages.messages)
-        # memory = ConversationBufferMemory(memory_key="chat_history", chat_memory=SQLmessages)
-        # memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         memory = ConversationBufferMemory(memory_key="chat_history", chat_memory=SQLmessages, return_messages=True)
 
         print("building prompt")
 
+        # custom suffix, may needed
         CUSTOM_SUFFIX = """TOOLS
         ------
         Assistant can ask the user to use tools to look up information that may be helpful in answering the users original question. The tools the human can use are:
@@ -328,18 +341,12 @@ def ChatWithContext():
 
         {{{{input}}}}"""
 
-        tools = [transcript_search_tool]
-        # tools = []
-
-        # print(CUSTOM_SUFFIX)
+        tools = [transcript_search_tool]                
 
         prompt = ConversationalChatAgent.create_prompt(
             tools                        
         )
-
-        print("prompt created")
-
-        print("setting up LLM")
+        
         # Set up the LLM
         llm = ChatOpenAI(
             temperature=0.3,
@@ -353,39 +360,16 @@ def ChatWithContext():
             agent=agent, tools=tools, verbose=True, memory=memory, handle_parsing_errors=True
         )
 
-
-        # # create our agent
-        # conversational_agent = initialize_agent(
-        #     agent='conversational-react-description', 
-        #     tools=tools, 
-        #     llm=llm,
-        #     verbose=True,
-        #     max_iterations=3,
-        #     memory=memory,
-        # )
-
-        # agent = initialize_agent(
-        #     agent='chat-conversational-react-description',
-        #     tools=tools,
-        #     llm=llm,
-        #     verbose=True,
-        #     max_iterations=3,
-        #     early_stopping_method='generate',
-        #     memory=memory
-        # )
-
         input = json_data['message']
-        # out = agent({"input": input, "chat_history": []})
-        # out = agent(input)
-        out = agent_chain.run(input=input)
-        print(out)
+        output = agent_chain.run(input=input)
+        print(output)
         
         print(SQLmessages.messages)
 
         response_data = {
-            "title": "Example Response",
-            "content": "This is a sample response with video timestamps.",
-            "videos": []
+            "title": input,
+            "content": output,
+            "videos": videoOutput
         }
         return jsonify(response_data)
         return jsonify({"response" : "success"})
