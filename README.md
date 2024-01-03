@@ -24,7 +24,7 @@ CastawayGPT is a tool designed to:
 6. Run `flask --app server run` in the `server` folder.
 
 **Note:**
-- Currently, the chat with context feature is not yet implemented (as of 10Dec2023).
+- Chat with context feature is working with Langchain Agent and custom similarity search Langchain tool.
 - OpenAI language models used:
     - GPT-3.5-turbo-0613
     - Text-davinci:003
