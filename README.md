@@ -18,7 +18,7 @@ CastawayGPT is a tool designed to:
 3. Run `npm install` in the root directory.
 4. Install the following Python dependencies using pip:
     ```bash
-    pip install langchain chromadb scikit-learn openai flask numpy
+    pip install langchain chromadb scikit-learn openai flask numpy SQLAlchemy
     ```
 5. Run `npm run dev` in the root folder.
 6. Run `flask --app server run` in the `server` folder.
