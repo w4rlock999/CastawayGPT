@@ -105,6 +105,14 @@
   z-index: 0;
 }
 
+.responsesContainer {    
+  display: block;  
+}
+
+.bottomSpacer {
+  display: block;  
+  height: 190px;
+}
 .chatInputAndButtonContainer {
   display: inline-block;
   position: fixed;
@@ -170,6 +178,9 @@
 }
 
 .responseContainer {
+  /* display: block; */
+  height: 100%;
+
   position: relative;
   top: 50px;
 

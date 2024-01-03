@@ -76,6 +76,9 @@ export default function Home() {
     ]
   }
 
+  const curChatResponsesDummiesThree : chatResponse[] = [curChatResponse,curChatResponse,curChatResponse]
+  const curChatResponsesDummiesOne : chatResponse[] = [curChatResponse]
+
   const [youtubeLink, setYoutubeLink] = useState('')  
   const [promptSearch, setPromptSearch] = useState('')
   const [landingMode, setLandingMode] = useState(true)
@@ -152,12 +155,13 @@ export default function Home() {
       }
 
       {landingMode == false && 
-        <div className = {styles.chatPageContainer}>
+        <div className = {styles.chatPageContainer}>          
           {responses.map((response, index) => (
             <ChatResponse curChatResponse = {response}/>    
-          ))}
-          {/* <ChatResponse/>    
-          <ChatResponse/>     */}
+          ))}          
+          <div className = {styles.bottomSpacer}>
+          </div>
+
           <div className = {styles.chatInputAndButtonContainer}>          
             <input className = {styles.chatInput} type='text' placeholder='Ask anything here!' value={chatMessage} onChange={chatOnChangeHandler}>
             </input>                    
