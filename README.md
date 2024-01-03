@@ -30,5 +30,5 @@ CastawayGPT is a tool designed to:
     - Text-davinci:003
     - Text-embedding-ada-002-v2
 - Summarization is performed using "best representation vectors" to save cost.
-- Vector Store utilizes ChromaDB (non-persistent in-memory).
+- Vector Store utilizes ChromaDB (currently persistent in ./server folder).
 - This repository is a work in progress, huge thanks to OpenAI, Langchain, ChromaDB, and Scikit-Learn.
