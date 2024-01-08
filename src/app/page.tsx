@@ -87,7 +87,8 @@ export default function Home() {
   const [responses, setResponses] = useState<chatResponse[]>([])
   // setArrayOfObjects((prevArray) => [...prevArray, newObject]); //to add new object to the array, use this 
   
-  const runButtonOnClickHandler = async () => {    
+  const runButtonOnClickHandler = async (e) => {    
+    e.preventDefault()  
 
     let response = await fetch('/api/initializeWithLink', {
       method: 'POST',
@@ -113,7 +114,8 @@ export default function Home() {
     setChatMessage(e.target.value)
   }  
 
-  const chatButtonOnClickHandler = async () => {    
+  const chatButtonOnClickHandler = async (e) => {    
+    e.preventDefault()  
 
     var curChatMessage = chatMessage
     setChatMessage("")
@@ -146,11 +148,13 @@ export default function Home() {
           <h2 className = {styles.logo}>
             CastawayGPT
           </h2>
-          <input className = {styles.linkInput} type='text' placeholder='Paste your youtube link here' value={youtubeLink} onChange={linkOnChangeHandler}>
-          </input>
-          <button className = {styles.runButton} onClick={runButtonOnClickHandler}>
-            Start Chat
-          </button>      
+          <form>
+            <input className = {styles.linkInput} type='text' placeholder='Paste your youtube link here' value={youtubeLink} onChange={linkOnChangeHandler}>
+            </input>
+            <button type='submit' className = {styles.runButton} onClick={runButtonOnClickHandler}>
+              Start Chat
+            </button>      
+          </form>
         </div>
       }
 
@@ -163,11 +167,13 @@ export default function Home() {
           </div>
 
           <div className = {styles.chatInputAndButtonContainer}>          
-            <input className = {styles.chatInput} type='text' placeholder='Ask anything here!' value={chatMessage} onChange={chatOnChangeHandler}>
-            </input>                    
-            <button className = {styles.sendButton} onClick={chatButtonOnClickHandler}>       
-            ▲       
-            </button>        
+            <form>
+              <input className = {styles.chatInput} type='text' placeholder='Ask anything here!' value={chatMessage} onChange={chatOnChangeHandler}>
+              </input>                    
+              <button type='submit' className = {styles.sendButton} onClick={chatButtonOnClickHandler}>       
+              ▲       
+              </button>        
+            </form>
           </div>        
         </div> 
       } 

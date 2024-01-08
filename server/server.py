@@ -243,7 +243,7 @@ def SummarizeVectorData():
             # append to array of timestamps
             timestampsSuggestion.append({
                 "title" : topic,
-                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
+                "link"  : f"https://www.youtube-nocookie.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
             })
 
         response_data = {
@@ -296,7 +296,7 @@ def ChatWithContext():
             # append to array of timestamps
             videoOutput.append({
                 "title" : "",
-                "link"  : f"https://www.youtube.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
+                "link"  : f"https://www.youtube-nocookie.com/embed/{videoID}?fs=1&start={curTimestamp}&end={curTimestamp}"
             })
 
         return output
