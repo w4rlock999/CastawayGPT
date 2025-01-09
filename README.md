@@ -1,3 +1,5 @@
+### Since August 2024, Youtube has a new policy to prevent scraping of their data. Since then, close to none of youtube scraping library works which is needed for this project
+
 # CastawayGPT
 
 ## Description
@@ -5,6 +7,10 @@ CastawayGPT is a tool designed to:
 - Summarize YouTube podcasts
 - Recommend interesting timestamps for unique topics
 - Engage in a chat with context related to the video
+
+
+https://github.com/user-attachments/assets/4023899d-62dd-4f62-8bf6-1cf3a9196b93
+
 
 ![CastawayGPT 4](https://github.com/w4rlock999/CastawayGPT/assets/19953728/a4a57761-a5da-4386-a30f-0c25ce84f946)
 ##
